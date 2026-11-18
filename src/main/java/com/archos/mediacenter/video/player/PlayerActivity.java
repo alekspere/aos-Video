@@ -581,11 +581,17 @@ public class PlayerActivity extends AppCompatActivity implements PlayerControlle
             return;
         }
         int passthroughMode = Integer.parseInt(mPreferences.getString("force_audio_passthrough_multiple", "0"));
+        boolean spatializationEnabled = isSpatializationEnabledForPlayback();
+        // Reset the boost whenever output mode changes, including passthrough/spatialization.
+        LibAvos.setDownmixLfeBoost(ArchosFeatures.isAndroidTV(this)
+                && passthroughMode == 0 && !spatializationEnabled
+                && mPreferences.getBoolean("enable_downmix_androidtv", false)
+                && mPreferences.getBoolean(VideoPreferencesCommon.KEY_INCREASE_LFE_DOWNMIX, false));
         if (passthroughMode > 0) {
             LibAvos.setDownmix(0);
             return;
         }
-        if (isSpatializationEnabledForPlayback()) {
+        if (spatializationEnabled) {
             LibAvos.setDownmix(0);
             return;
         }

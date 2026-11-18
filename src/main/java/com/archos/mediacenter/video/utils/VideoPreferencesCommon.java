@@ -154,6 +154,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     public static final String KEY_SUBTITILES_CREDENTIALS= "subtitles_credentials";
     public static final String KEY_FORCE_SW = "force_software_decoding";
     public static final String KEY_FORCE_AUDIO_PASSTHROUGH = "force_passthrough";
+    public static final String KEY_INCREASE_LFE_DOWNMIX = "increase_lfe_downmix";
     public static final String KEY_PARSER_SYNC_MODE = "parser_sync_mode";
     public static final String KEY_DOLBY_VISION_MODE = "dolby_vision_mode";
     public static final String KEY_DISABLE_DOLBY_VISION = "disable_dolby_vision";
@@ -272,6 +273,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     private CheckBoxPreference mEnableSpatialization = null;
     private CheckBoxPreference mDisableDownmix = null;
     private CheckBoxPreference mEnableDownmixATV = null;
+    private CheckBoxPreference mIncreaseLfeDownmix = null;
     private ListPreference mActivateRefreshrateTVSwitch = null;
     private CheckBoxPreference mEnableCutoutModeShortEdge = null;
     private CheckBoxPreference mEnableCutBothSidesX = null;
@@ -612,6 +614,7 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     }
 
     private void switchAdvancedPreferences() {
+        mIncreaseLfeDownmix.setVisible(ArchosFeatures.isAndroidTV(getActivity()));
         PreferenceCategory prefCategory = (PreferenceCategory) findPreference("preferences_category_video");
         PreferenceCategory aboutCategory = (PreferenceCategory) findPreference(KEY_ABOUT_CATEGORY);
         PreferenceCategory netShareCategory = (PreferenceCategory) findPreference(KEY_NETSHARE_CATEGORY);
@@ -690,6 +693,15 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
             // not needed since for fire10hd only UDP discovery is upsetting wifi drivers
             netShareCategory.removePreference(mSmbDisableTcpDiscovery);
             netShareCategory.removePreference(mSmbDisableMdnsDiscovery);
+        }
+    }
+
+    private void updateLfeDownmixState() {
+        if (mIncreaseLfeDownmix != null) {
+            // Preserve the stored choice while downmix or PCM output is disabled.
+            mIncreaseLfeDownmix.setEnabled(ArchosFeatures.isAndroidTV(getActivity())
+                    && mSharedPreferences.getBoolean("enable_downmix_androidtv", false)
+                    && "0".equals(mSharedPreferences.getString("force_audio_passthrough_multiple", "0")));
         }
     }
 
@@ -930,6 +942,8 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
         mEnableSpatialization = (CheckBoxPreference) findPreference("player_spatialization_enabled");
         mDisableDownmix = (CheckBoxPreference) findPreference("disable_downmix");
         mEnableDownmixATV = (CheckBoxPreference) findPreference("enable_downmix_androidtv");
+        mIncreaseLfeDownmix = (CheckBoxPreference) findPreference(KEY_INCREASE_LFE_DOWNMIX);
+        updateLfeDownmixState();
         final ListPreference mForceAudioPassthroughMultiple = (ListPreference) findPreference("force_audio_passthrough_multiple");
         boolean isPassthroughSupported = CustomApplication.isPassthroughSupported();
         boolean isIecEncapsulationCapable = CustomApplication.isIecEncapsulationCapable();
@@ -2076,6 +2090,9 @@ public class VideoPreferencesCommon implements OnSharedPreferenceChangeListener 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
                                           String key) {
+        if ("enable_downmix_androidtv".equals(key) || "force_audio_passthrough_multiple".equals(key)) {
+            updateLfeDownmixState();
+        }
         if (key.equals(Trakt.KEY_TRAKT_USER) ||key.equals(Trakt.KEY_TRAKT_ACCESS_TOKEN)|| key.equals(Trakt.KEY_TRAKT_SHA1)) {
             // preference just changed, assume it's valid
             mTraktStatus = Trakt.Status.SUCCESS;

@@ -137,6 +137,14 @@
             android:summary="@string/preferences_enable_downmix_androidtv_summary"
             android:title="@string/preferences_enable_downmix_androidtv_title"
             app:iconSpaceReserved="false"/>
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:enabled="false"
+            android:key="increase_lfe_downmix"
+            android:persistent="true"
+            android:summary="@string/preferences_increase_lfe_downmix_summary"
+            android:title="@string/preferences_increase_lfe_downmix_title"
+            app:iconSpaceReserved="false"/>
         <ListPreference
             android:defaultValue="0"
             android:dialogTitle="@string/preference_tv_refreshrate_switch"
